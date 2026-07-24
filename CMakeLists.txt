@@ -47,5 +47,15 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 # ── Subdirectories ────────────────────────────────────────────────────────────
 add_subdirectory(tests)
 add_subdirectory(client)
-# add_subdirectory(src)         # uncomment when src gets .cpp files
-# add_subdirectory(benchmarks)  # uncomment when benchmarks are added
+
+# ── Server executable ─────────────────────────────────────────────────────────
+add_executable(redis-lite-server
+    src/main.cpp
+)
+
+target_include_directories(redis-lite-server PRIVATE src)
+
+target_link_libraries(redis-lite-server
+    PRIVATE
+        $<$<PLATFORM_ID:Windows>:ws2_32>
+)
