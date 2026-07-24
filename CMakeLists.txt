@@ -46,6 +46,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 
 # ── Subdirectories ────────────────────────────────────────────────────────────
 add_subdirectory(tests)
+add_subdirectory(client)
 # add_subdirectory(src)         # uncomment when src gets .cpp files
 # add_subdirectory(benchmarks)  # uncomment when benchmarks are added
-# add_subdirectory(client)      # uncomment when client is added

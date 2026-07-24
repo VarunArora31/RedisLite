@@ -70,3 +70,14 @@ target_link_libraries(test_server
 )
 
 gtest_discover_tests(test_server)
+
+add_executable(test_persistence
+    test_persistence.cpp
+)
+
+target_link_libraries(test_persistence
+    PRIVATE
+        GTest::gtest_main
+)
+
+gtest_discover_tests(test_persistence)

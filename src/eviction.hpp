@@ -73,6 +73,15 @@ public:
         index_.erase(it);
     }
 
+    // Visit every entry in MRU→LRU order. Callback: void(const Key&, const Value&).
+    // Caller must hold an appropriate lock; forEach itself takes no lock.
+    template <typename Fn>
+    void forEach(Fn&& fn) const {
+        for (auto& [k, v] : items_) {
+            fn(k, v);
+        }
+    }
+
     bool contains(const Key& key) const {
         return index_.find(key) != index_.end();
     }

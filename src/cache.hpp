@@ -128,6 +128,34 @@ public:
         return shardFor(key).ttl(key);
     }
 
+    // ── Snapshot (used by persistence) ───────────────────────────────────────
+
+    using SnapshotEntry = Shard::Entry;
+
+    // Collect all live entries across every shard.
+    // Not atomic across shards but consistent per-shard (each shard locks itself).
+    std::vector<SnapshotEntry> snapshot() {
+        std::vector<SnapshotEntry> all;
+        for (auto& shard : shards_) {
+            auto entries = shard->snapshot();
+            all.insert(all.end(),
+                       std::make_move_iterator(entries.begin()),
+                       std::make_move_iterator(entries.end()));
+        }
+        return all;
+    }
+
+    // Replay a snapshot back into the cache (used on startup after load).
+    void restore(const std::vector<SnapshotEntry>& entries) {
+        for (auto& e : entries) {
+            if (e.ttlMs > 0) {
+                setWithTTL(e.key, e.value, Millis{e.ttlMs});
+            } else {
+                set(e.key, e.value);
+            }
+        }
+    }
+
     // ── Maintenance ───────────────────────────────────────────────────────────
 
     // Sweep all shards and remove expired keys.

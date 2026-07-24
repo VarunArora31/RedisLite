@@ -134,7 +134,43 @@ public:
         return remaining.count() > 0LL ? remaining.count() : 0LL;
     }
 
-    // ── Maintenance (called by background expiry thread) ──────────────────────
+    // ── Snapshot (used by persistence layer) ─────────────────────────────────
+
+    struct Entry {
+        std::string key;
+        std::string value;
+        long long   ttlMs;   // -1 = persistent, >0 = remaining ms
+    };
+
+    // Return a point-in-time copy of all live, non-expired entries.
+    // Expired keys are skipped. Called by persistence::save() under
+    // a unique lock so the snapshot is consistent.
+    std::vector<Entry> snapshot() {
+        std::unique_lock lock(mutex_);
+        std::vector<Entry> entries;
+        entries.reserve(lru_.size());
+
+        // Iterate TTL map first to collect expired keys to skip
+        auto now = Clock::now();
+
+        // Walk all entries via a temporary get loop — but LRUCache has no
+        // iterator. Instead, use a side-channel: we know every key in lru_
+        // is also in index_. We expose a forEachKey() from LRUCache.
+        lru_.forEach([&](const std::string& key, const std::string& val) {
+            // Skip expired
+            auto it = ttl_.find(key);
+            if (it != ttl_.end() && now >= it->second) return;
+
+            long long ttlMs = -1LL;
+            if (it != ttl_.end()) {
+                auto remaining = std::chrono::duration_cast<Millis>(
+                    it->second - now);
+                ttlMs = remaining.count() > 0 ? remaining.count() : 0LL;
+            }
+            entries.push_back({key, val, ttlMs});
+        });
+        return entries;
+    }
 
     // Sweep all keys with a TTL and remove those that have expired.
     // Returns the number of keys purged.
