@@ -65,6 +65,14 @@ public:
         index_[key] = items_.begin();
     }
 
+    // Removes a key from the cache. No-op if the key is not present.
+    void erase(const Key& key) {
+        auto it = index_.find(key);
+        if (it == index_.end()) return;
+        items_.erase(it->second);
+        index_.erase(it);
+    }
+
     bool contains(const Key& key) const {
         return index_.find(key) != index_.end();
     }
