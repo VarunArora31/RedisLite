@@ -37,6 +37,36 @@ target_link_libraries(test_cache
 
 gtest_discover_tests(test_cache)
 
-# add_executable(test_protocol    test_protocol.cpp)
-# target_link_libraries(test_protocol PRIVATE GTest::gtest_main)
-# gtest_discover_tests(test_protocol)
+add_executable(test_protocol
+    test_protocol.cpp
+)
+
+target_link_libraries(test_protocol
+    PRIVATE
+        GTest::gtest_main
+)
+
+gtest_discover_tests(test_protocol)
+
+add_executable(test_expiry
+    test_expiry.cpp
+)
+
+target_link_libraries(test_expiry
+    PRIVATE
+        GTest::gtest_main
+)
+
+gtest_discover_tests(test_expiry)
+
+add_executable(test_server
+    test_server.cpp
+)
+
+target_link_libraries(test_server
+    PRIVATE
+        GTest::gtest_main
+        $<$<PLATFORM_ID:Windows>:ws2_32>
+)
+
+gtest_discover_tests(test_server)
