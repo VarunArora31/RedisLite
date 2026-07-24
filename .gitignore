@@ -1,6 +1,8 @@
-# Build output
+# Build output — entirely generated, never commit
 build/
+build*/
 out/
+out*/
 
 # CMake user-specific files
 CMakeUserPresets.json
