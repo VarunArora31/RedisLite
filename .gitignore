@@ -28,3 +28,7 @@ CMakeUserPresets.json
 
 # Runtime artifacts
 *.rdb
+
+# Scratch / temp output files
+*.txt
+!benchmarks/**/*.txt
