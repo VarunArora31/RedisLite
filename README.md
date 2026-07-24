@@ -260,6 +260,32 @@ Each entry: `<key_len> <val_len> <ttl_ms_remaining>` followed immediately by the
 
 ---
 
+## Benchmark Results
+
+Measured with `redis-benchmark` against RedisLite (16 shards, `-O2`) and real Redis 3.0 on the same machine. Numbers are requests/sec.
+
+### 10 concurrent clients — 100k requests
+
+| Command | RedisLite | Redis 3.0 | Ratio |
+|---|---:|---:|---:|
+| PING | 70,000 | 30,000 | **2.3×** |
+| SET  | 77,000 | 29,000 | **2.7×** |
+| GET  | 75,000 | 29,900 | **2.5×** |
+
+### 1 client — baseline latency
+
+| Command | RedisLite | Redis 3.0 | Ratio |
+|---|---:|---:|---:|
+| PING | 26,500 | 26,700 | **~1.0×** |
+| SET  | 26,400 | 26,100 | **~1.0×** |
+| GET  | 25,400 | 25,000 | **~1.0×** |
+
+**What the numbers show:** with a single client there is no concurrency, so sharding provides no advantage — both servers score identically (~26k req/s), limited purely by localhost TCP round-trip latency. Under 10–50 concurrent clients, RedisLite's 16 independent shards allow parallel execution across CPU cores while Redis 3.0's single-threaded event loop serialises everything. That gap — ~1.0× at 1 client, ~2.5× at 10+ clients — is the sharding advantage measured directly.
+
+See [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for full tables and detailed analysis.
+
+---
+
 ## Design Decisions
 
 **Why header-only?**

@@ -198,6 +198,50 @@ private:
         }
     }
 
+    // ── RESP array parser ─────────────────────────────────────────────────────
+    // Converts a RESP array (*<n>\r\n$<l>\r\n<arg>\r\n...) into an inline
+    // command string ("CMD arg1 arg2\r\n") that protocol::parse() understands.
+    // Returns empty string if the buffer doesn't yet have a full array.
+    // Advances `buf` past the consumed bytes on success.
+    static std::string tryParseRESPArray(std::string& buf) {
+        if (buf.empty() || buf[0] != '*') return "";
+
+        std::size_t pos = buf.find("\r\n");
+        if (pos == std::string::npos) return "";
+
+        int argc = std::stoi(buf.substr(1, pos - 1));
+        if (argc <= 0) return "";
+
+        std::size_t cur = pos + 2;
+        std::vector<std::string> args;
+        args.reserve(static_cast<std::size_t>(argc));
+
+        for (int i = 0; i < argc; ++i) {
+            // Expect $<len>\r\n
+            if (cur >= buf.size() || buf[cur] != '$') return "";
+            std::size_t eol = buf.find("\r\n", cur);
+            if (eol == std::string::npos) return "";
+            int len = std::stoi(buf.substr(cur + 1, eol - cur - 1));
+            cur = eol + 2;
+
+            // Expect <len> bytes + \r\n
+            if (cur + static_cast<std::size_t>(len) + 2 > buf.size()) return "";
+            args.push_back(buf.substr(cur, static_cast<std::size_t>(len)));
+            cur += static_cast<std::size_t>(len) + 2;
+        }
+
+        // Reassemble as inline command
+        std::string inline_cmd;
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            if (i > 0) inline_cmd += ' ';
+            inline_cmd += args[i];
+        }
+        inline_cmd += "\r\n";
+
+        buf.erase(0, cur);   // consume the RESP array from buffer
+        return inline_cmd;
+    }
+
     // ── Client handler (one per connected client) ─────────────────────────────
 
     void handleClient(SocketFd fd) {
@@ -215,11 +259,28 @@ private:
             tmp[n] = '\0';
             buf += tmp;
 
-            std::size_t pos;
-            while ((pos = buf.find('\n')) != std::string::npos) {
-                std::string line = buf.substr(0, pos + 1);
-                buf.erase(0, pos + 1);
+            // Process all complete commands in buffer.
+            // Supports two framing modes:
+            //   RESP array  (*<n>\r\n...)  — used by redis-cli / redis-benchmark
+            //   Inline text (CMD arg\r\n)  — used by our CLI / netcat
+            bool progress = true;
+            while (progress && !buf.empty()) {
+                progress = false;
+                std::string line;
 
+                if (buf[0] == '*') {
+                    // RESP array framing
+                    line = tryParseRESPArray(buf);
+                    if (line.empty()) break;   // incomplete — wait for more data
+                } else {
+                    // Inline framing — find complete line
+                    std::size_t pos = buf.find('\n');
+                    if (pos == std::string::npos) break;
+                    line = buf.substr(0, pos + 1);
+                    buf.erase(0, pos + 1);
+                }
+
+                progress = true;
                 std::string resp = dispatch(line);
 #ifdef _WIN32
                 ::send(fd, resp.data(), static_cast<int>(resp.size()), 0);
