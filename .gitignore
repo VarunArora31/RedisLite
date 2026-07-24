@@ -25,3 +25,6 @@ CMakeUserPresets.json
 
 # Compiler output
 *.d
+
+# Runtime artifacts
+*.rdb
