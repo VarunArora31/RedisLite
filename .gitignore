@@ -1,0 +1,25 @@
+# Build output
+build/
+out/
+
+# CMake user-specific files
+CMakeUserPresets.json
+
+# Compiled object files
+*.o
+*.obj
+
+# Binaries
+*.exe
+*.out
+*.dll
+*.so
+*.dylib
+
+# IDE folders
+.vscode/
+.idea/
+*.user
+
+# Compiler output
+*.d
