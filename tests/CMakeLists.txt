@@ -26,10 +26,17 @@ target_link_libraries(test_shard
 
 gtest_discover_tests(test_shard)
 
-# add_executable(test_cache       test_cache.cpp)
-# target_link_libraries(test_cache PRIVATE GTest::gtest_main)
-# gtest_discover_tests(test_cache)
-#
+add_executable(test_cache
+    test_cache.cpp
+)
+
+target_link_libraries(test_cache
+    PRIVATE
+        GTest::gtest_main
+)
+
+gtest_discover_tests(test_cache)
+
 # add_executable(test_protocol    test_protocol.cpp)
 # target_link_libraries(test_protocol PRIVATE GTest::gtest_main)
 # gtest_discover_tests(test_protocol)
