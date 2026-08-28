@@ -292,13 +292,26 @@ See [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for full tables and detaile
 
 I chose a header-only organization for RedisLite. Each component keeps its interface and implementation together in its `.hpp` file, which makes the relatively small project easier to navigate and keeps each layer self-contained.
 
-It also avoids having to jump between `.hpp` and `.cpp` files for closely related code. Since this is a project rather than a large production library with strict compilation boundaries, I found this organization simpler.
+It also avoids having to jump between `.hpp` and `.cpp` files for closely related code. Since RedisLite is a relatively small project rather than a large production library with strict compilation boundaries, I found this organization simpler.
 
 **Why `std::shared_mutex` instead of `std::mutex`?**
-`exists()`, `ttl()`, and `size()` are read-only operations that don't touch the LRU list. A shared lock lets multiple clients query these simultaneously without blocking each other. The upgrade to unique lock happens only for mutations.
+
+RedisLite has both read-heavy and write operations. Read-only operations such as `exists()`, `ttl()`, and `size()` can safely execute concurrently when they only access shared state. `std::shared_mutex` allows multiple readers to hold the lock simultaneously, while write operations acquire an exclusive lock when modifying shared state.
+
+This provides better read concurrency than using a `std::mutex`, where every operation would have to acquire an exclusive lock.
 
 **Why LRU and not LFU?**
-LRU is simpler to implement correctly (O(1) via list + hashmap) and performs better on workloads with temporal locality — which is the common case for a cache. LFU is better under Zipf-distributed access patterns. Adding LFU as an alternative eviction policy using the same `LRUCache` interface is a planned extension.
 
-**Why thread-per-connection and not epoll?**
-Thread-per-connection is simple to reason about and sufficient for hundreds of concurrent clients on modern hardware. An `epoll`-based event loop would scale to tens of thousands but adds significant complexity. The architecture is designed so `server.hpp` is the only place networking lives — swapping in an event loop later would not touch any other layer.
+LRU is simple to implement efficiently using a hashmap and linked list, providing O(1) average-time lookup and eviction operations. It also performs well for workloads with temporal locality, which is a common access pattern for caches.
+
+LFU can perform better for some workloads where frequently accessed items should remain cached regardless of when they were last accessed, but it requires additional frequency-tracking logic and bookkeeping.
+
+A future extension could support multiple eviction policies behind a common cache interface.
+
+**Why thread-per-connection and not `epoll`?**
+
+I chose a thread-per-connection model because it keeps the networking implementation simple and easy to reason about while being sufficient for the scale targeted by RedisLite.
+
+An event-driven model using `epoll` can handle very large numbers of concurrent connections more efficiently, but introduces additional complexity around event loops, non-blocking I/O, and connection state management.
+
+Networking is isolated within `server.hpp`, so replacing the networking model would largely be confined to that layer.

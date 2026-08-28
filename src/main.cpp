@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
     if (argc > 3) capacity = static_cast<std::size_t>(std::atoi(argv[3]));
     if (argc > 4) shards   = static_cast<std::size_t>(std::atoi(argv[4]));
 
+    // fail-fast, early validation
     if (port == 0) {
         std::cerr << "Invalid port.\n";
         printUsage(argv[0]);
@@ -79,6 +80,7 @@ int main(int argc, char* argv[]) {
     std::signal(SIGTERM, onSignal);
 
     // Create server 
+    // RAII
     server::Server srv(capacity, shards, /*expiryInterval=*/100ms);
 
     // Load snapshot 
@@ -119,7 +121,7 @@ int main(int argc, char* argv[]) {
         std::this_thread::sleep_for(100ms);
     }
 
-    // Graceful shutdown 
+    // Graceful shutdown pattern
     std::cout << "\n[shutdown] stopping server...\n";
     srv.stop();
 
