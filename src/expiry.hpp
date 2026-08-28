@@ -67,7 +67,7 @@ public:
         stop();
     }
 
-    // ── Control ───────────────────────────────────────────────────────────────
+    // Control 
 
     // Spawn the background thread. No-op if already running.
     void start() {
@@ -88,7 +88,7 @@ public:
         if (thread_.joinable()) thread_.join();
     }
 
-    // ── Observers ────────────────────────────────────────────────────────────
+    // Observers 
 
     bool isRunning() const noexcept {
         return running_.load(std::memory_order_acquire);
@@ -119,7 +119,7 @@ private:
         }
     }
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // State 
     ShardedCache&           cache_;
     const Millis            interval_;
     std::atomic<bool>       running_{false};

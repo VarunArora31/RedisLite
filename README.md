@@ -289,7 +289,10 @@ See [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for full tables and detaile
 ## Design Decisions
 
 **Why header-only?**
-All source is in `.hpp` files. For a project of this size it avoids a separate compilation model and keeps each layer self-contained and easy to read.
+
+I chose a header-only organization for RedisLite. Each component keeps its interface and implementation together in its `.hpp` file, which makes the relatively small project easier to navigate and keeps each layer self-contained.
+
+It also avoids having to jump between `.hpp` and `.cpp` files for closely related code. Since this is a project rather than a large production library with strict compilation boundaries, I found this organization simpler.
 
 **Why `std::shared_mutex` instead of `std::mutex`?**
 `exists()`, `ttl()`, and `size()` are read-only operations that don't touch the LRU list. A shared lock lets multiple clients query these simultaneously without blocking each other. The upgrade to unique lock happens only for mutations.

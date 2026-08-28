@@ -19,7 +19,7 @@
 //
 // Design decisions
 // ─────────────────
-//   • Snapshotting only (no AOF). Simple, sufficient for a portfolio project.
+//   • Snapshotting only (no AOF). Simple, sufficient for a this project.
 //   • Writes to a temp file first, then atomically renames to the target path
 //     (atomic on POSIX; best-effort on Windows via MoveFileEx).
 //   • On load, expired entries are silently skipped (their TTL elapsed while
@@ -50,7 +50,7 @@ namespace persistence {
 static constexpr const char* MAGIC   = "REDISLITE-SNAPSHOT";
 static constexpr int         VERSION = 1;
 
-// ── Save ─────────────────────────────────────────────────────────────────────
+// Save 
 
 // Serialise `cache` to `path`. Throws std::runtime_error on I/O failure.
 // Writes to a temp file then renames atomically so a crash mid-write
@@ -94,7 +94,7 @@ inline void save(cache::ShardedCache& cache, const std::string& path) {
 #endif
 }
 
-// ── Load ─────────────────────────────────────────────────────────────────────
+// Load 
 
 // Deserialise a snapshot file into `cache`. Throws std::runtime_error if the
 // file is malformed. Returns the number of entries loaded.

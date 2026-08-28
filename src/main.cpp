@@ -33,7 +33,7 @@
 
 using namespace std::chrono_literals;
 
-// ── Signal handling ───────────────────────────────────────────────────────────
+// Signal handling 
 
 static std::atomic<bool> gShutdown{false};
 
@@ -41,7 +41,7 @@ static void onSignal(int) {
     gShutdown.store(true, std::memory_order_relaxed);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers 
 
 static void printUsage(const char* prog) {
     std::cerr
@@ -54,10 +54,10 @@ static void printUsage(const char* prog) {
         << "  shards    - number of shards     (default 16, must be power of 2)\n";
 }
 
-// ── main ─────────────────────────────────────────────────────────────────────
+// main
 
 int main(int argc, char* argv[]) {
-    // ── Parse arguments ───────────────────────────────────────────────────────
+    // Parse arguments 
     uint16_t    port     = 6379;
     std::string snapFile = "dump.rdb";
     std::size_t capacity = 100'000;
@@ -74,14 +74,14 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // ── Register signal handlers ──────────────────────────────────────────────
+    // Register signal handlers 
     std::signal(SIGINT,  onSignal);
     std::signal(SIGTERM, onSignal);
 
-    // ── Create server ─────────────────────────────────────────────────────────
+    // Create server 
     server::Server srv(capacity, shards, /*expiryInterval=*/100ms);
 
-    // ── Load snapshot ─────────────────────────────────────────────────────────
+    // Load snapshot 
     {
         std::ifstream check(snapFile);
         if (check.good()) {
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // ── Start server ──────────────────────────────────────────────────────────
+    // Start server
     if (!srv.start(port)) {
         std::cerr << "[fatal] failed to bind on port " << port
                   << " — is another process using it?\n";
@@ -114,12 +114,12 @@ int main(int argc, char* argv[]) {
               << "        snapshot : " << snapFile                      << "\n"
               << "        press Ctrl-C to stop\n";
 
-    // ── Wait for shutdown signal ──────────────────────────────────────────────
+    // Wait for shutdown signal
     while (!gShutdown.load(std::memory_order_relaxed)) {
         std::this_thread::sleep_for(100ms);
     }
 
-    // ── Graceful shutdown ─────────────────────────────────────────────────────
+    // Graceful shutdown 
     std::cout << "\n[shutdown] stopping server...\n";
     srv.stop();
 
