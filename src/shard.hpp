@@ -58,7 +58,7 @@ public:
 
     ~Shard() = default;
 
-    // ── Write operations (unique lock) ────────────────────────────────────────
+    // Write operations (unique lock) 
 
     // Insert or overwrite key → value with no expiry.
     void set(const std::string& key, std::string value) {
@@ -98,7 +98,7 @@ public:
         return ttl_.erase(key) > 0;
     }
 
-    // ── Read operations ───────────────────────────────────────────────────────
+    // Read operations 
 
     // Returns the value if the key exists and has not expired.
     // Lazily removes the entry if it is expired.
@@ -134,7 +134,7 @@ public:
         return remaining.count() > 0LL ? remaining.count() : 0LL;
     }
 
-    // ── Snapshot (used by persistence layer) ─────────────────────────────────
+    // Snapshot (used by persistence layer) 
 
     struct Entry {
         std::string key;
@@ -188,7 +188,7 @@ public:
         return expired.size();
     }
 
-    // ── Observers ────────────────────────────────────────────────────────────
+    // Observers 
 
     // Number of live (non-expired) keys currently held.
     // Note: may include not-yet-lazily-evicted expired entries; use
@@ -211,7 +211,7 @@ private:
         return Clock::now() >= it->second;
     }
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // State
     mutable std::shared_mutex                  mutex_;
     LRUCache<std::string, std::string>         lru_;
     std::unordered_map<std::string, TimePoint> ttl_;

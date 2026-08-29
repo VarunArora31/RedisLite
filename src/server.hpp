@@ -12,7 +12,7 @@
 #include <thread>
 #include <vector>
 
-// ── Platform socket abstraction ───────────────────────────────────────────────
+// Platform socket abstraction 
 #ifdef _WIN32
 #  ifndef WIN32_LEAN_AND_MEAN
 #    define WIN32_LEAN_AND_MEAN
@@ -93,7 +93,7 @@ public:
 #endif
     }
 
-    // ── Control ───────────────────────────────────────────────────────────────
+    // Control 
 
     // Bind to `port` and start accepting connections.
     // Returns true on success, false if already running or bind fails.
@@ -169,7 +169,7 @@ public:
     uint16_t boundPort() const noexcept { return boundPort_; }
 
 private:
-    // ── Accept loop (runs in acceptThread_) ───────────────────────────────────
+    // Accept loop (runs in acceptThread_) 
 
     void acceptLoop() {
         while (running_.load()) {
@@ -198,7 +198,7 @@ private:
         }
     }
 
-    // ── RESP array parser ─────────────────────────────────────────────────────
+    // RESP array parser 
     // Converts a RESP array (*<n>\r\n$<l>\r\n<arg>\r\n...) into an inline
     // command string ("CMD arg1 arg2\r\n") that protocol::parse() understands.
     // Returns empty string if the buffer doesn't yet have a full array.
@@ -242,7 +242,7 @@ private:
         return inline_cmd;
     }
 
-    // ── Client handler (one per connected client) ─────────────────────────────
+    // Client handler (one per connected client) 
 
     void handleClient(SocketFd fd) {
         std::string buf;
@@ -297,7 +297,7 @@ private:
         closeSocket(fd);
     }
 
-    // ── Command dispatch ──────────────────────────────────────────────────────
+    // Command dispatch 
 
     std::string dispatch(const std::string& line) {
         using namespace protocol;
@@ -371,7 +371,7 @@ private:
         }
     }
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // State 
     cache::ShardedCache      cache_;
     cache::ExpiryWorker      expiry_;
     SocketFd                 listenFd_  = INVALID_SOCKET_FD;
